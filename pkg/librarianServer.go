@@ -5,6 +5,14 @@ import (
 	"library/proto/pb"
 )
 
+type Database struct {
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Url      string `yaml:"url"`
+	Port     string `yaml:"port"`
+	Name     string `yaml:"name"`
+}
+
 type Server struct {
 	pb.UnimplementedLibrarianServer
 	db *sql.DB
@@ -60,7 +68,10 @@ func (s *Server) GetAuthor(book *pb.Book, stream pb.Librarian_GetAuthorServer) e
 	return rows.Err()
 }
 
-func (s *Server) ConnectToDB(dbUrl string) (err error) {
+func (s *Server) ConnectToDB(config Database) (err error) {
+	dbUrl := config.User + ":" + config.Password +
+		"@tcp(" + config.Url + ":" + config.Port + ")/" + config.Name
+	println(dbUrl)
 	s.db, err = sql.Open("mysql", dbUrl)
 	if err != nil {
 		return err
