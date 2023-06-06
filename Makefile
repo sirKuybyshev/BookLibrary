@@ -5,3 +5,5 @@ run:
 	go run cmd/main.go
 
 all: build
+
+

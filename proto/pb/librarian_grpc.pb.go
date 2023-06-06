@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type LibrarianClient interface {
 	GetBooks(ctx context.Context, in *Author, opts ...grpc.CallOption) (Librarian_GetBooksClient, error)
-	GetAuthor(ctx context.Context, in *Book, opts ...grpc.CallOption) (Librarian_GetAuthorClient, error)
+	GetAuthor(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Author, error)
 }
 
 type librarianClient struct {
@@ -66,36 +66,13 @@ func (x *librarianGetBooksClient) Recv() (*Book, error) {
 	return m, nil
 }
 
-func (c *librarianClient) GetAuthor(ctx context.Context, in *Book, opts ...grpc.CallOption) (Librarian_GetAuthorClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Librarian_ServiceDesc.Streams[1], "/librarian.Librarian/GetAuthor", opts...)
+func (c *librarianClient) GetAuthor(ctx context.Context, in *Book, opts ...grpc.CallOption) (*Author, error) {
+	out := new(Author)
+	err := c.cc.Invoke(ctx, "/librarian.Librarian/GetAuthor", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &librarianGetAuthorClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type Librarian_GetAuthorClient interface {
-	Recv() (*Author, error)
-	grpc.ClientStream
-}
-
-type librarianGetAuthorClient struct {
-	grpc.ClientStream
-}
-
-func (x *librarianGetAuthorClient) Recv() (*Author, error) {
-	m := new(Author)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // LibrarianServer is the server API for Librarian service.
@@ -103,7 +80,7 @@ func (x *librarianGetAuthorClient) Recv() (*Author, error) {
 // for forward compatibility
 type LibrarianServer interface {
 	GetBooks(*Author, Librarian_GetBooksServer) error
-	GetAuthor(*Book, Librarian_GetAuthorServer) error
+	GetAuthor(context.Context, *Book) (*Author, error)
 	mustEmbedUnimplementedLibrarianServer()
 }
 
@@ -114,8 +91,8 @@ type UnimplementedLibrarianServer struct {
 func (UnimplementedLibrarianServer) GetBooks(*Author, Librarian_GetBooksServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetBooks not implemented")
 }
-func (UnimplementedLibrarianServer) GetAuthor(*Book, Librarian_GetAuthorServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetAuthor not implemented")
+func (UnimplementedLibrarianServer) GetAuthor(context.Context, *Book) (*Author, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthor not implemented")
 }
 func (UnimplementedLibrarianServer) mustEmbedUnimplementedLibrarianServer() {}
 
@@ -151,25 +128,22 @@ func (x *librarianGetBooksServer) Send(m *Book) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Librarian_GetAuthor_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(Book)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _Librarian_GetAuthor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Book)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(LibrarianServer).GetAuthor(m, &librarianGetAuthorServer{stream})
-}
-
-type Librarian_GetAuthorServer interface {
-	Send(*Author) error
-	grpc.ServerStream
-}
-
-type librarianGetAuthorServer struct {
-	grpc.ServerStream
-}
-
-func (x *librarianGetAuthorServer) Send(m *Author) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(LibrarianServer).GetAuthor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/librarian.Librarian/GetAuthor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LibrarianServer).GetAuthor(ctx, req.(*Book))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // Librarian_ServiceDesc is the grpc.ServiceDesc for Librarian service.
@@ -178,16 +152,16 @@ func (x *librarianGetAuthorServer) Send(m *Author) error {
 var Librarian_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "librarian.Librarian",
 	HandlerType: (*LibrarianServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetAuthor",
+			Handler:    _Librarian_GetAuthor_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "GetBooks",
 			Handler:       _Librarian_GetBooks_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "GetAuthor",
-			Handler:       _Librarian_GetAuthor_Handler,
 			ServerStreams: true,
 		},
 	},

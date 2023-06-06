@@ -6,7 +6,7 @@ option go_package = "../pb";
 
 service Librarian {
   rpc GetBooks(Author) returns (stream Book) {}
-  rpc GetAuthor(Book) returns (stream Author) {} //some books have few authors
+  rpc GetAuthor(Book) returns (Author) {} //some books have few authors
 }
 
 message Author {

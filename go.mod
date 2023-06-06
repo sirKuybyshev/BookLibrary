@@ -3,6 +3,7 @@ module library
 go 1.20
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/go-sql-driver/mysql v1.7.1
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
