@@ -26,7 +26,6 @@ CREATE TABLE `Authors` (
   `Id` int NOT NULL AUTO_INCREMENT,
   `FirstName` varchar(255) NOT NULL,
   `LastName` varchar(255) NOT NULL,
-  `ExtraNames` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -38,10 +37,10 @@ CREATE TABLE `Authors` (
 LOCK TABLES `Authors` WRITE;
 /*!40000 ALTER TABLE `Authors` DISABLE KEYS */;
 INSERT INTO `Authors` VALUES
-(1,'Lev','Tolstoy',NULL),
-(2,'Eric Maria','Remark',NULL),
-(3,'Robert','Dauni','Jr'),
-(4,'Fyodor','Dostoevsky','Michailovich');
+(1,'Lev','Tolstoy'),
+(2,'Eric Maria','Remark'),
+(3,'Robert','Dauni'),
+(4,'Fyodor','Dostoevsky');
 /*!40000 ALTER TABLE `Authors` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -89,4 +88,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-06-06  3:16:18
+-- Dump completed on 2023-06-06 15:57:33

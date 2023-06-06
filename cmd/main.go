@@ -1,30 +1,20 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"google.golang.org/grpc"
-	pb "library/proto/pb"
+	librarianServer "library/pkg"
+	"library/proto/pb"
 	"log"
 	"net"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
 	port = flag.Int("port", 50051, "The Server port")
 )
-
-type Server struct {
-	pb.UnimplementedLibrarianServer
-}
-
-func (s *Server) GetBooks(*pb.Author, pb.Librarian_GetBooksServer) error {
-	return nil
-}
-
-func (s *Server) GetAuthor(context.Context, *pb.Book) (*pb.Author, error) {
-	return nil, nil
-}
 
 func main() {
 	flag.Parse()
@@ -32,10 +22,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
-	pb.RegisterLibrarianServer(s, &Server{})
+	server := &librarianServer.Server{}
+	err = server.ConnectToDB("user:password@tcp(localhost:3306)/Library")
+	if err != nil {
+		log.Fatalf("failed to establish db connection, %e", err)
+	}
+	defer server.DisconnectDB()
+	grpcServer := grpc.NewServer()
+	pb.RegisterLibrarianServer(grpcServer, server)
 	log.Printf("Server listening at %v", lis.Addr())
-	if err := s.Serve(lis); err != nil {
+	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
