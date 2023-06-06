@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package librarian;
+
+option go_package = "../pb";
+
+service Librarian {
+  rpc GetBooks(Author) returns (stream Book) {}
+  rpc GetAuthor(Book) returns (Author) {}
+}
+
+message Author {
+  string FirstName = 1;
+  string LastName = 2;
+}
+
+message Book {
+  string Name = 1;
+  bytes Text = 2;
+  optional string Encoding = 3; //default -- no encoding, plain text
+}
