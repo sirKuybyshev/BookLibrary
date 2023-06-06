@@ -3,23 +3,25 @@ package main
 import (
 	"flag"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"google.golang.org/grpc"
-	ls "library/pkg"
-	"library/proto/pb"
 	"log"
 	"net"
+
+	_ "github.com/go-sql-driver/mysql"
+	"google.golang.org/grpc"
+
+	ls "library/pkg"
+	"library/proto/pb"
 )
 
 var (
-	sc = flag.String("serverConfig", "cmd/config/serverConfig.yaml",
+	c = flag.String("config", "cmd/config/serverConfig.yaml",
 		"Path to serverConfig config, example is shown in cmd/config/serverConfig.yaml")
 )
 
 func main() {
 	flag.Parse()
 	server := &ls.Server{}
-	err := server.Construct(*sc)
+	err := server.Construct(*c)
 	if err != nil {
 		log.Fatalf("failed to establish db connection, %e", err)
 	}

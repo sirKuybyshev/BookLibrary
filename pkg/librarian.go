@@ -3,13 +3,16 @@ package librarian
 import (
 	"context"
 	"database/sql"
-	"gopkg.in/yaml.v2"
-	"library/proto/pb"
 	"os"
+
+	"gopkg.in/yaml.v2"
+
+	"library/proto/pb"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
+// Config structs declaration
 type serverConfig struct {
 	Port int `yaml:"port"`
 }
@@ -27,6 +30,7 @@ type LibrarianConfig struct {
 	DB     Database     `yaml:"db"`
 }
 
+// Implementation of proto-generated service
 type Server struct {
 	pb.UnimplementedLibrarianServer
 	config                      LibrarianConfig
@@ -34,6 +38,7 @@ type Server struct {
 	getBooksStmt, getAuthorStmt *sql.Stmt
 }
 
+// Reads from config and open connection to db
 func (s *Server) Construct(config string) error {
 	err := s.parseConfig(config)
 	if err != nil {
@@ -46,6 +51,7 @@ func (s *Server) GetPort() int {
 	return s.config.Server.Port
 }
 
+// Implementation of GetBooks RPC
 func (s *Server) GetBooks(author *pb.Author, stream pb.Librarian_GetBooksServer) error {
 	rows, err := s.getBooksStmt.Query(author.FirstName, author.LastName)
 	if err != nil {
@@ -66,7 +72,8 @@ func (s *Server) GetBooks(author *pb.Author, stream pb.Librarian_GetBooksServer)
 	return rows.Err()
 }
 
-func (s *Server) GetAuthor(ctx context.Context, book *pb.Book) (author *pb.Author, err error) {
+// Implementation of GetAuthor RPC
+func (s *Server) GetAuthor(_ context.Context, book *pb.Book) (author *pb.Author, err error) {
 	rows, err := s.getAuthorStmt.Query(book.Name)
 	if err != nil {
 		return nil, err
@@ -83,15 +90,16 @@ func (s *Server) GetAuthor(ctx context.Context, book *pb.Book) (author *pb.Autho
 	return
 }
 
+// Create sql.db entity and ping to check integrity
 func (s *Server) connectToDB() (err error) {
 	dbUrl := s.config.DB.User + ":" + s.config.DB.Password +
 		"@tcp(" + s.config.DB.Url + ":" + s.config.DB.Port + ")/" + s.config.DB.Name
-	println(dbUrl)
 	s.db, err = sql.Open("mysql", dbUrl)
 	if err != nil {
 		return err
 	}
 	err = s.db.Ping()
+	//As we always do same kind of queries it's conscious to prepare them
 	s.getBooksStmt, err =
 		s.db.Prepare("SELECT name, text, encoding FROM Library.Books WHERE AuthorId in (SELECT id FROM Library.Authors where FirstName = ? AND LastName = ?)")
 	if err != nil {
